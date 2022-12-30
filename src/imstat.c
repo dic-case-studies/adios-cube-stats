@@ -40,7 +40,7 @@ int main(int argc, char *argv[]) {
 
     if (naxes[2] == 1) {
       long temp = naxes[2];
-      temp = naxes[3];
+      naxes[2] = naxes[3];
       naxes[3] = temp;
     }
 
