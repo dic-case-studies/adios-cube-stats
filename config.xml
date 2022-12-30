@@ -1,0 +1,11 @@
+<?xml version="1.0"?>
+<adios-config>
+  <io name="HDF5IO">
+
+    <engine type="HDF5">
+    </engine>
+
+    <transport type="Null">
+    </transport>
+  </io>
+</adios-config>

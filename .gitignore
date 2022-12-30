@@ -1,3 +1,8 @@
 *.fits
 *.out
-casa.bp
+casa.bp/
+.history
+build/
+.vscode/
+__pycache__/
+*.hdf5

@@ -8,8 +8,8 @@ CXX=g++
 
 CC=gcc
 
-%.out: %.c
-	$(CC) -o $@ $< $(CFLAGS) $(OPT)
+%.out: src/%.c dir
+	$(CC) -o build/$@ $< $(CFLAGS) $(OPT)
 
 clean:
 	rm -rf *.out

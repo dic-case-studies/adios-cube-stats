@@ -11,9 +11,9 @@ if (len(sys.argv) < 2):
 
 filename = sys.argv[1]
 
-os.system("rm -rf casa.bp")
+os.system("rm -rf casa.hdf5")
 
-with adios2.open("casa.bp", "w") as fh:
+with adios2.open("casa.hdf5", "w", config_file="config.xml", io_in_config_file="HDF5IO") as fh:
     
     # Convert the FITS into a BP file
     with fits.open(filename) as hdul:
