@@ -5,7 +5,6 @@ with adios2.open("casa.hdf5", "r", config_file="config.xml", io_in_config_file="
    for fstep in fh:
       # inspect variables in current step
       step_vars = fstep.available_variables()
-      print(step_vars)
       
       # print variables information
       for name, info in step_vars.items():
@@ -21,4 +20,6 @@ with adios2.open("casa.hdf5", "r", config_file="config.xml", io_in_config_file="
       
       print("Fstep " , i , " Done")
       i += 1
+      
+      print(step_vars["data"])
          
