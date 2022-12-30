@@ -53,8 +53,6 @@ if __name__ == '__main__':
     parser.add_argument("--norobust", dest="norobust", action="store_true")
 
     args = parser.parse_args()
-    
-    print(args.cube)
 
     if args.cube == '':
         print("Spectral cube not given - you need to use the -c option")

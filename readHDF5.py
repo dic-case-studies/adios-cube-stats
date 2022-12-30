@@ -20,6 +20,4 @@ with adios2.open("casa.hdf5", "r", config_file="config.xml", io_in_config_file="
       
       print("Fstep " , i , " Done")
       i += 1
-      
-      print(step_vars["data"])
          

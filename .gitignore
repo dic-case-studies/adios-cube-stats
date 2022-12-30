@@ -1,6 +1,6 @@
 *.fits
 *.out
-casa.bp/
+*.bp/
 .history
 build/
 .vscode/

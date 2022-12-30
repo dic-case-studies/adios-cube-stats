@@ -1,10 +1,14 @@
 CXXFLAGS=-std=c++14 -Wall -Wextra -pedantic -O3
 
-CFLAGS=-std=c99 -Wall -Wextra -pedantic -O3 `pkg-config --libs --cflags cfitsio` 
+CFLAGS=-std=c99 -Wall -Wextra -pedantic -O3 
+
+CFITSIO=`pkg-config --libs --cflags cfitsio`
+
+ADIOS=`adios2-config --cxx-flags --cxx-libs`
 
 DEBUGFLAGS=-fsanitize=address -g
 
-CXX=g++
+CXX=mpicxx
 
 CC=gcc
 
@@ -12,7 +16,7 @@ CC=gcc
 	$(CC) -o build/$@ $< $(CFLAGS) $(OPT)
 
 %.out: src/%.cpp dir
-	$(CXX) -o build/$@ $< $(CXXFLAGS) $(OPT)
+	$(CXX) -o build/$@ $< $(CXXFLAGS) $(OPT) $(ADIOS)
 
 clean:
 	rm -rf build/*.out
