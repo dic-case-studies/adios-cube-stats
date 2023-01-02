@@ -11,28 +11,19 @@ int main(int argc, char *argv[])
     int status = 0; /* CFITSIO status value MUST be initialized to zero! */
     int hdutype, naxis;
     long naxes[4];
-    float *pix;
 
-#if ADIOS2_USE_MPI
     MPI_Init(&argc, &argv);
-#endif
-    int rank = 0;
-    int size = 1;
 
-#if ADIOS2_USE_MPI
+    int rank, size;
+
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &size);
-#endif
 
     // TODO: use metadata to determine hdu type. Currently assuming that its an Image, not table
     hdutype = IMAGE_HDU;
 
-#if ADIOS2_USE_MPI
     adios2::fstream in("casa.bp", adios2::fstream::in,
                        MPI_COMM_WORLD);
-#else
-    adios2::fstream in("casa.bp", adios2::fstream::in);
-#endif
 
     adios2::fstep inStep;
 
@@ -86,14 +77,7 @@ int main(int argc, char *argv[])
         // }
 
         size_t spat_size = naxes[0] * naxes[1];
-        pix = (float *)malloc(spat_size *
-                              sizeof(float)); /* memory for 1 spatial channel */
 
-        if (pix == NULL)
-        {
-            printf("Memory allocation error\n");
-            return (1);
-        }
         if (rank == 0)
         {
             printf("#%7s %15s %10s %10s %10s %10s %10s %10s %10s\n", "Channel",
@@ -104,65 +88,27 @@ int main(int argc, char *argv[])
                    "mJy/beam", "mJy/beam");
         }
 
-        const std::vector<float> data = inStep.read<float>("data");
-
-        int quot = naxes[2] / size;
-        int rem = naxes[2] % size;
+        // int quot = naxes[2] / size;
+        // int rem = naxes[2] % size;
+        // const std::vector<float> data = inStep.read<float>("data");
 
         /* process image one row at a time; increment row # in each loop */
-        for (int channel = rank * quot; channel < (rank + 1) * quot; channel++)
+        for (int channel = 0; channel < naxes[2]; channel++)
         {
-            int startIndex = channel * spat_size;
-
-            for (size_t i = 0; i < spat_size; i++)
+            if (channel % size == rank)
             {
-                pix[i] = data[startIndex + i];
-            }
+                const adios2::Dims start = {static_cast<std::size_t>(channel), static_cast<std::size_t>(0), static_cast<std::size_t>(0), static_cast<std::size_t>(0)};
 
-            float sum = 0., meanval = 0., minval = 1.E33, maxval = -1.E33;
-            float valid_pix = 0;
-            for (size_t ii = 0; ii < spat_size; ii++)
-            {
-                float val = pix[ii];
-                valid_pix += isnan(val) ? 0 : 1;
-                val = isnan(val) ? 0.0 : val;
+                const adios2::Dims count = {static_cast<std::size_t>(1), static_cast<std::size_t>(1), static_cast<std::size_t>(naxes[0]), static_cast<std::size_t>(naxes[1])};
 
-                sum += val; /* accumlate sum */
-                if (val < minval)
-                    minval = val; /* find min and  */
-                if (val > maxval)
-                    maxval = val; /* max values    */
-            }
-            meanval = sum / valid_pix;
-
-            meanval *= 1000.0;
-            minval *= 1000.0;
-            maxval *= 1000.0;
-
-            printf("%8d %15.6f %10.3f %10.3f %10.3f %10.3f %10.3f %10.3f %10.3f\n",
-                   channel, 1.0f, meanval, 0.0f, 0.0f, 0.0f, 0.0f, minval, maxval);
-            // printf("  sum of pixels = %g\n", sum);
-            // printf("  mean value    = %g\n", meanval);
-            // printf("  minimum value = %g\n", minval);
-            // printf("  maximum value = %g\n", maxval);
-        }
-
-        if (rem != 0 && rank == 0)
-        {
-            for (int channel = size * quot; channel < naxes[2]; channel++)
-            {
-                int startIndex = channel * spat_size;
-
-                for (size_t i = 0; i < spat_size; i++)
-                {
-                    pix[i] = data[startIndex + i];
-                }
+                const std::vector<float> data = inStep.read<float>("data", start, count);
 
                 float sum = 0., meanval = 0., minval = 1.E33, maxval = -1.E33;
                 float valid_pix = 0;
+                // for (size_t ii = channel*spat_size; ii < (channel+1)*spat_size; ii++)
                 for (size_t ii = 0; ii < spat_size; ii++)
                 {
-                    float val = pix[ii];
+                    float val = data[ii];
                     valid_pix += isnan(val) ? 0 : 1;
                     val = isnan(val) ? 0.0 : val;
 
@@ -183,11 +129,13 @@ int main(int argc, char *argv[])
                 // printf("  sum of pixels = %g\n", sum);
                 // printf("  mean value    = %g\n", meanval);
                 // printf("  minimum value = %g\n", minval);
-                // printf("  maximum value = %g\n", maxval);
+                // printf("  maximum value = %g\n", maxval);}
             }
         }
         in.end_step();
     }
-
     in.close();
+
+    MPI_Finalize();
+    return 0;
 }

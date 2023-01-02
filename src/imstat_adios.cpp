@@ -119,5 +119,8 @@ int main(int argc, char *argv[])
       // printf("  minimum value = %g\n", minval);
       // printf("  maximum value = %g\n", maxval);
     }
+    in.end_step();
   }
+
+  in.close();
 }

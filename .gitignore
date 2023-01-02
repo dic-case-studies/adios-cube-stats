@@ -6,3 +6,4 @@ build/
 .vscode/
 __pycache__/
 *.hdf5
+*-result.txt
