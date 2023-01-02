@@ -44,11 +44,11 @@ int main(int argc, char *argv[])
     std::cout << std::endl;
 
     // TODO: Check if both 4d and 3d compatibility is needed
-    if (status || naxis != 4)
-    {
-      printf("Error: NAXIS = %d.  Only 4-D images are supported.\n", naxis);
-      return (1);
-    }
+    // if (status || naxis != 4)
+    // {
+    //   printf("Error: NAXIS = %d.  Only 4-D images are supported.\n", naxis);
+    //   return (1);
+    // }
 
     if (naxes[2] == 1)
     {
@@ -57,11 +57,11 @@ int main(int argc, char *argv[])
       naxes[3] = temp;
     }
 
-    if (naxes[3] != 1)
-    {
-      printf("Error: Polarisation axis must be 1\n");
-      return 1;
-    }
+    // if (naxes[3] != 1)
+    // {
+    //   printf("Error: Polarisation axis must be 1\n");
+    //   return 1;
+    // }
 
     size_t spat_size = naxes[0] * naxes[1];
     pix = (float *)malloc(spat_size *

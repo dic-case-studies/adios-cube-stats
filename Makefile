@@ -1,4 +1,4 @@
-CXXFLAGS=-std=c++14 -Wall -Wextra -pedantic -O3
+CXXFLAGS=-std=c++14 -Wall -Wextra -pedantic
 
 CFLAGS=-std=c99 -Wall -Wextra -pedantic -O3 
 
@@ -16,7 +16,7 @@ CC=gcc
 	$(CC) -o build/$@ $< $(CFLAGS) $(OPT)
 
 %.out: src/%.cpp dir
-	$(CXX) -o build/$@ $< $(CXXFLAGS) $(OPT) $(ADIOS)
+	$(CXX) -o build/$@ $< $(CXXFLAGS) $(OPT) $(ADIOS) $(DEBUGFLAGS)
 
 clean:
 	rm -rf build/*.out
