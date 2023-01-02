@@ -9,8 +9,8 @@
 int main(int argc, char *argv[])
 {
   int status = 0; /* CFITSIO status value MUST be initialized to zero! */
-  int hdutype, naxis;
-  long naxes[4];
+  int64_t hdutype, naxis;
+  int64_t naxes[4];
   float *pix;
 
   // TODO: use metadata to determine hdu type. Currently assuming that its an Image, not table
@@ -23,23 +23,23 @@ int main(int argc, char *argv[])
   {
     const std::size_t currentStep = inStep.current_step();
     // get image count of dimensions by reading the BP file variables
-    const std::vector<std::string> s_numAxis = inStep.read<std::string>("NAXIS");
+    const std::vector<int64_t> s_numAxis = inStep.read<int64_t>("NAXIS");
 
     std::cout << "Found numAxis:  " << s_numAxis.front() << " in currentStep "
               << currentStep << std::endl;
 
-    naxis = std::stoi(s_numAxis.front());
+    naxis = s_numAxis.front();
 
     // get image dimensions by reading the BP file variables
     for (int i = 1; i <= naxis; i++)
     {
       std::string search_var = "NAXIS" + std::to_string(i);
-      const std::vector<std::string> s_axis = inStep.read<std::string>(search_var);
+      const std::vector<int64_t> s_axis = inStep.read<int64_t>(search_var);
 
       std::cout << "Found NAXIS" << std::to_string(i) << " :  " << s_axis.front() << " in currentStep "
                 << currentStep << std::endl;
 
-      naxes[i - 1] = std::stoi(s_axis.front());
+      naxes[i - 1] = s_axis.front();
     }
     std::cout << std::endl;
 

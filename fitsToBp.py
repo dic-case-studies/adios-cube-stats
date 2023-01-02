@@ -17,13 +17,16 @@ with adios2.open("casa.bp", "w") as fh:
     
     # Convert the FITS into a BP file
     with fits.open(filename) as hdul:
-
         for hdu in hdul:
-            print(hdu)
             hdr = hdu.header
             for key in hdr.keys():
-                fh.write(key, str(hdr[key]))
-
+                value = hdr[key]
+                if(not key):
+                    continue
+                if((type(hdr[key]) is int) or (type(hdr[key]) is float)):
+                    fh.write(key, np.array(hdr[key]))
+                else:
+                    fh.write(key, str(hdr[key]))
 
             data = hdu.data
             # Endian conversion
