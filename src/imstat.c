@@ -58,6 +58,7 @@ int main(int argc, char *argv[]) {
       return (1);
     }
 
+    // TODO: remove totpix, not used
     totpix = naxes[0] * naxes[1] * naxes[2] * naxes[3];
     fpixel[0] = 1; /* read starting with first pixel in each row */
     fpixel[1] = 1;

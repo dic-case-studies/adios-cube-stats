@@ -6,65 +6,72 @@
 
 #include <adios2.h>
 
-int main(int argc, char *argv[]) {
-  
-  fitsfile *fptr; /* FITS file pointer */
+int main(int argc, char *argv[])
+{
   int status = 0; /* CFITSIO status value MUST be initialized to zero! */
-  int hdutype, naxis, ii;
-  long naxes[4], totpix, fpixel[4];
-  double *pix;
+  int hdutype, naxis;
+  long naxes[4];
+  float *pix;
 
-  if (argc != 2) {
-    printf("Usage: imstat image \n");
-    printf("\n");
-    printf("Compute statistics of pixels in the input image\n");
-    printf("\n");
-    printf("Examples: \n");
-    printf("  imstat  image.fits                    - the whole image\n");
-    printf("  imarith 'image.fits[200:210,300:310]' - image section\n");
-    printf("  imarith 'table.fits+1[bin (X,Y) = 4]' - image constructed\n");
-    printf("     from X and Y columns of a table, with 4-pixel bin size\n");
-    return (0);
-  }
+  // TODO: use metadata to determine hdu type. Currently assuming that its an Image, not table
+  hdutype = IMAGE_HDU;
+  adios2::fstream in("casa.bp", adios2::fstream::in);
 
-  if (!fits_open_image(&fptr, argv[1], READONLY, &status)) {
-    if (fits_get_hdu_type(fptr, &hdutype, &status) || hdutype != IMAGE_HDU) {
-      printf("Error: this program only works on images, not tables\n");
-      return (1);
+  adios2::fstep inStep;
+
+  while (adios2::getstep(in, inStep))
+  {
+    const std::size_t currentStep = inStep.current_step();
+    // get image count of dimensions by reading the BP file variables
+    const std::vector<std::string> s_numAxis = inStep.read<std::string>("NAXIS");
+
+    std::cout << "Found numAxis:  " << s_numAxis.front() << " in currentStep "
+              << currentStep << std::endl;
+
+    naxis = std::stoi(s_numAxis.front());
+
+    // get image dimensions by reading the BP file variables
+    for (int i = 1; i <= naxis; i++)
+    {
+      std::string search_var = "NAXIS" + std::to_string(i);
+      const std::vector<std::string> s_axis = inStep.read<std::string>(search_var);
+
+      std::cout << "Found NAXIS" << std::to_string(i) << " :  " << s_axis.front() << " in currentStep "
+                << currentStep << std::endl;
+
+      naxes[i - 1] = std::stoi(s_axis.front());
     }
+    std::cout << std::endl;
 
-    fits_get_img_dim(fptr, &naxis, &status);
-    fits_get_img_size(fptr, 4, naxes, &status);
-
-    if (status || naxis != 4) {
+    // TODO: Check if both 4d and 3d compatibility is needed
+    if (status || naxis != 4)
+    {
       printf("Error: NAXIS = %d.  Only 4-D images are supported.\n", naxis);
       return (1);
     }
 
-    if (naxes[2] == 1) {
+    if (naxes[2] == 1)
+    {
       long temp = naxes[2];
       naxes[2] = naxes[3];
       naxes[3] = temp;
     }
 
-    if (naxes[3] != 1) {
+    if (naxes[3] != 1)
+    {
       printf("Error: Polarisation axis must be 1\n");
       return 1;
     }
 
     size_t spat_size = naxes[0] * naxes[1];
-    pix = (double *)malloc(spat_size *
-                           sizeof(double)); /* memory for 1 spatial channel */
+    pix = (float *)malloc(spat_size *
+                          sizeof(float)); /* memory for 1 spatial channel */
 
-    if (pix == NULL) {
+    if (pix == NULL)
+    {
       printf("Memory allocation error\n");
       return (1);
     }
-
-    totpix = naxes[0] * naxes[1] * naxes[2] * naxes[3];
-    fpixel[0] = 1; /* read starting with first pixel in each row */
-    fpixel[1] = 1;
-    fpixel[3] = 1; /* Polarisation axis */
 
     printf("#%7s %15s %10s %10s %10s %10s %10s %10s %10s\n", "Channel",
            "Frequency", "Mean", "Std", "Median", "MADFM", "1%ile", "Min",
@@ -72,29 +79,23 @@ int main(int argc, char *argv[]) {
     printf("#%7s %15s %10s %10s %10s %10s %10s %10s %10s\n", " ", "MHz",
            "mJy/beam", "mJy/beam", "mJy/beam", "mJy/beam", "mJy/beam",
            "mJy/beam", "mJy/beam");
-    /* process image one row at a time; increment row # in each loop */
-    for (int channel = 1; channel <= naxes[2]; channel++) {
-      fpixel[2] = channel;
-      /* give starting pixel coordinate and number of pixels to read */
-      if (fits_read_pix(fptr, TDOUBLE, fpixel, spat_size, 0, pix, 0, &status))
-        break; /* jump out of loop on error */
-      
-      // if (channel == 1 || channel == 2) {
-      //   int valid_pix = 0;
-      //   for (ii = 0; ii < spat_size && valid_pix < 100; ii++) {
-      //     float val = pix[ii];
-      //     valid_pix += isnan(val) ? 0 : 1;
-      //     if (isnan(val)) {
-      //       continue;
-      //     } else {
-      //       printf("%d %f\n", ii, val);
-      //     }
-      //   }
-      // }
 
-      double sum = 0., meanval = 0., minval = 1.E33, maxval = -1.E33;
-      double valid_pix = 0;
-      for (ii = 0; ii < spat_size; ii++) {
+    const std::vector<float> data = inStep.read<float>("data");
+
+    /* process image one row at a time; increment row # in each loop */
+    for (int channel = 0; channel < naxes[2]; channel++)
+    {
+      int startIndex = channel * spat_size;
+
+      for (size_t i = 0; i < spat_size; i++)
+      {
+        pix[i] = data[startIndex + i];
+      }
+
+      float sum = 0., meanval = 0., minval = 1.E33, maxval = -1.E33;
+      float valid_pix = 0;
+      for (size_t ii = 0; ii < spat_size; ii++)
+      {
         float val = pix[ii];
         valid_pix += isnan(val) ? 0 : 1;
         val = isnan(val) ? 0.0 : val;
@@ -118,17 +119,5 @@ int main(int argc, char *argv[]) {
       // printf("  minimum value = %g\n", minval);
       // printf("  maximum value = %g\n", maxval);
     }
-
-    free(pix);
-    fits_close_file(fptr, &status);
   }
-
-  if (status) {
-    fits_report_error(stderr, status); /* print any error message */
-  } else {
-    fprintf(stderr, "Statistics of %ld x %ld x %ld x %ld  image\n", naxes[0], naxes[1],
-           naxes[2], naxes[3]);
-  }
-
-  return (status);
 }

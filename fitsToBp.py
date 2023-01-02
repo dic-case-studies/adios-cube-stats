@@ -34,4 +34,4 @@ with adios2.open("casa.bp", "w") as fh:
             start = list(np.zeros(data.ndim, dtype=np.int32))
             # print(data.size)
 
-            fh.write('data', data, size, start, size, end_step=True)
+            fh.write("data", data, size, start, size, end_step=True)
