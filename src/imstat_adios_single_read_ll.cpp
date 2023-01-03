@@ -28,8 +28,6 @@ int main(int argc, char *argv[])
     if (s_numAxis)
     {
       reader.Get(s_numAxis, naxis);
-      std::cout << "Found numAxis:  " << naxis << " in currentStep "
-                << currentStep << std::endl;
     }
 
     // get image dimensions by reading the BP file variables
@@ -43,7 +41,6 @@ int main(int argc, char *argv[])
       if (s_axis)
       {
         reader.Get(s_axis, naxes[i - 1]);
-        std::cout << "Found NAXIS" << std::to_string(i) << " :  " << naxes[i - 1] << " in currentStep " << currentStep << std::endl;
       }
     }
     std::cout << std::endl;
@@ -57,26 +54,21 @@ int main(int argc, char *argv[])
            "mJy/beam", "mJy/beam", "mJy/beam", "mJy/beam", "mJy/beam",
            "mJy/beam", "mJy/beam");
 
+    adios2::Variable<float> varData =
+        io.InquireVariable<float>("data");
+    std::vector<float> data;
+    if (varData)
+    {
+      reader.Get(varData, data);
+    }
+    reader.EndStep();
+
     /* process image one channel at a time; increment channel # in each loop */
     for (int channel = 0; channel < naxes[2]; channel++)
     {
-      const adios2::Dims start = {static_cast<std::size_t>(0), static_cast<std::size_t>(channel), static_cast<std::size_t>(0), static_cast<std::size_t>(0)};
-
-      const adios2::Dims count = {static_cast<std::size_t>(1), static_cast<std::size_t>(1), static_cast<std::size_t>(naxes[0]), static_cast<std::size_t>(naxes[1])};
-
-      adios2::Variable<float> varData =
-          io.InquireVariable<float>("data");
-      std::vector<float> data;
-      if (varData)
-      {
-        adios2::Box<adios2::Dims> selection = {start, count};
-        varData.SetSelection(selection);
-        reader.Get(varData, data);
-      }
-
       float sum = 0., meanval = 0., minval = 1.E33, maxval = -1.E33;
       float valid_pix = 0;
-      for (size_t ii = 0; ii < spat_size; ii++)
+      for (size_t ii = channel * spat_size; ii < (channel + 1) * spat_size; ii++)
       {
         float val = data[ii];
         valid_pix += isnan(val) ? 0 : 1;
@@ -97,9 +89,6 @@ int main(int argc, char *argv[])
       printf("%8d %15.6f %10.3f %10.3f %10.3f %10.3f %10.3f %10.3f %10.3f\n",
              channel + 1, 1.0f, meanval, 0.0f, 0.0f, 0.0f, 0.0f, minval, maxval);
     }
-
-    // TODO: Figure out how to call this endStep without ending the step
-    reader.EndStep();
 
     std::cout << "Done with stats" << std::endl;
   }
