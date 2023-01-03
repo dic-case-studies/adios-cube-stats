@@ -78,7 +78,7 @@ int main(int argc, char *argv[])
       maxval *= 1000.0;
 
       printf("%8d %15.6f %10.3f %10.3f %10.3f %10.3f %10.3f %10.3f %10.3f\n",
-             channel, 1.0f, meanval, 0.0f, 0.0f, 0.0f, 0.0f, minval, maxval);
+             channel+1, 1.0f, meanval, 0.0f, 0.0f, 0.0f, 0.0f, minval, maxval);
     }
     in.end_step();
   }

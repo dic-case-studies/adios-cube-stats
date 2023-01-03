@@ -65,41 +65,52 @@ int main(int argc, char *argv[])
                    "mJy/beam", "mJy/beam");
         }
 
-        /* process image one channel at a time; increment channel # in each loop */
-        for (int channel = 0; channel < naxes[2]; channel++)
+        int quot = naxes[2] / size;
+        int channelsToRead = quot;
+        int startOffset = 0;
+        int rem = naxes[2] % size;
+        if (rank >= size - rem)
         {
-            if (channel % size == rank)
+            channelsToRead = channelsToRead + 1;
+            startOffset = rem - (size - rank);
+        }
+        int startChannel = rank * quot + startOffset;
+
+        const adios2::Dims start = {static_cast<std::size_t>(0), static_cast<std::size_t>(startChannel), static_cast<std::size_t>(0), static_cast<std::size_t>(0)};
+
+        const adios2::Dims count = {static_cast<std::size_t>(1), static_cast<std::size_t>(channelsToRead), static_cast<std::size_t>(naxes[0]), static_cast<std::size_t>(naxes[1])};
+
+        // std::cout << "Rank: " << rank << "startChannel: " << startChannel << "channelsToRead: " << channelsToRead << std::endl; 
+
+        const std::vector<float> data = inStep.read<float>("data", start, count);
+
+        /* process image one channel at a time; increment channel # in each loop */
+        for (int channel = 0; channel < channelsToRead; channel++)
+        {
+
+            float sum = 0., meanval = 0., minval = 1.E33, maxval = -1.E33;
+            float valid_pix = 0;
+
+            for (size_t ii = channel * spat_size; ii < (channel + 1) * spat_size; ii++)
             {
-                const adios2::Dims start = {static_cast<std::size_t>(0), static_cast<std::size_t>(channel), static_cast<std::size_t>(0), static_cast<std::size_t>(0)};
+                float val = data[ii];
+                valid_pix += isnan(val) ? 0 : 1;
+                val = isnan(val) ? 0.0 : val;
 
-                const adios2::Dims count = {static_cast<std::size_t>(1), static_cast<std::size_t>(1), static_cast<std::size_t>(naxes[0]), static_cast<std::size_t>(naxes[1])};
-
-                const std::vector<float> data = inStep.read<float>("data", start, count);
-
-                float sum = 0., meanval = 0., minval = 1.E33, maxval = -1.E33;
-                float valid_pix = 0;
-
-                for (size_t ii = 0; ii < spat_size; ii++)
-                {
-                    float val = data[ii];
-                    valid_pix += isnan(val) ? 0 : 1;
-                    val = isnan(val) ? 0.0 : val;
-
-                    sum += val; /* accumlate sum */
-                    if (val < minval)
-                        minval = val; /* find min and  */
-                    if (val > maxval)
-                        maxval = val; /* max values    */
-                }
-                meanval = sum / valid_pix;
-
-                meanval *= 1000.0;
-                minval *= 1000.0;
-                maxval *= 1000.0;
-
-                printf("%8d %15.6f %10.3f %10.3f %10.3f %10.3f %10.3f %10.3f %10.3f\n",
-                       channel+1, 1.0f, meanval, 0.0f, 0.0f, 0.0f, 0.0f, minval, maxval);
+                sum += val; /* accumlate sum */
+                if (val < minval)
+                    minval = val; /* find min and  */
+                if (val > maxval)
+                    maxval = val; /* max values    */
             }
+            meanval = sum / valid_pix;
+
+            meanval *= 1000.0;
+            minval *= 1000.0;
+            maxval *= 1000.0;
+
+            printf("%8d %15.6f %10.3f %10.3f %10.3f %10.3f %10.3f %10.3f %10.3f\n",
+                   startChannel + channel +1, 1.0f, meanval, 0.0f, 0.0f, 0.0f, 0.0f, minval, maxval);
         }
         in.end_step();
     }

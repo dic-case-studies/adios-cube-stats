@@ -14,7 +14,9 @@ CC=gcc
 
 SRC = imstat_adios_mpi.out \
       imstat_adios.out \
-      imstat.out
+      imstat.out \
+	  imstat_adios_single_read.out \
+	  imstat_adios_mpi_less_reads.out \
 
 all: $(SRC)
 
