@@ -1,4 +1,3 @@
-#include "fitsio.h"
 #include <math.h>
 #include <stddef.h>
 #include <stdio.h>
@@ -6,10 +5,10 @@
 
 #include <adios2.h>
 
+// This will work only on 4d images with dimension of polarisation axis 1
 int main(int argc, char *argv[])
 {
-    int status = 0; /* CFITSIO status value MUST be initialized to zero! */
-    int64_t hdutype, naxis;
+    int64_t naxis;
     int64_t naxes[4];
 
     MPI_Init(&argc, &argv);
@@ -18,9 +17,6 @@ int main(int argc, char *argv[])
 
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &size);
-
-    // TODO: use metadata to determine hdu type. Currently assuming that its an Image, not table
-    hdutype = IMAGE_HDU;
 
     adios2::fstream in("casa.bp", adios2::fstream::in,
                        MPI_COMM_WORLD);
@@ -54,27 +50,8 @@ int main(int argc, char *argv[])
 
             naxes[i - 1] = s_axis.front();
         }
-        std::cout << std::endl;
-
-        // TODO: Check if both 4d and 3d compatibility is needed
-        // if (status || naxis != 4)
-        // {
-        //     printf("Error: NAXIS = %d.  Only 4-D images are supported.\n", naxis);
-        //     return (1);
-        // }
-
-        if (naxes[2] == 1)
-        {
-            long temp = naxes[2];
-            naxes[2] = naxes[3];
-            naxes[3] = temp;
-        }
-
-        // if (naxes[3] != 1)
-        // {
-        //     printf("Error: Polarisation axis must be 1\n");
-        //     return 1;
-        // }
+        if (rank == 0)
+            std::cout << std::endl;
 
         size_t spat_size = naxes[0] * naxes[1];
 
@@ -88,16 +65,12 @@ int main(int argc, char *argv[])
                    "mJy/beam", "mJy/beam");
         }
 
-        // int quot = naxes[2] / size;
-        // int rem = naxes[2] % size;
-        // const std::vector<float> data = inStep.read<float>("data");
-
-        /* process image one row at a time; increment row # in each loop */
+        /* process image one channel at a time; increment channel # in each loop */
         for (int channel = 0; channel < naxes[2]; channel++)
         {
             if (channel % size == rank)
             {
-                const adios2::Dims start = {static_cast<std::size_t>(channel), static_cast<std::size_t>(0), static_cast<std::size_t>(0), static_cast<std::size_t>(0)};
+                const adios2::Dims start = {static_cast<std::size_t>(0), static_cast<std::size_t>(channel), static_cast<std::size_t>(0), static_cast<std::size_t>(0)};
 
                 const adios2::Dims count = {static_cast<std::size_t>(1), static_cast<std::size_t>(1), static_cast<std::size_t>(naxes[0]), static_cast<std::size_t>(naxes[1])};
 
@@ -105,7 +78,7 @@ int main(int argc, char *argv[])
 
                 float sum = 0., meanval = 0., minval = 1.E33, maxval = -1.E33;
                 float valid_pix = 0;
-                // for (size_t ii = channel*spat_size; ii < (channel+1)*spat_size; ii++)
+
                 for (size_t ii = 0; ii < spat_size; ii++)
                 {
                     float val = data[ii];
@@ -126,10 +99,6 @@ int main(int argc, char *argv[])
 
                 printf("%8d %15.6f %10.3f %10.3f %10.3f %10.3f %10.3f %10.3f %10.3f\n",
                        channel, 1.0f, meanval, 0.0f, 0.0f, 0.0f, 0.0f, minval, maxval);
-                // printf("  sum of pixels = %g\n", sum);
-                // printf("  mean value    = %g\n", meanval);
-                // printf("  minimum value = %g\n", minval);
-                // printf("  maximum value = %g\n", maxval);}
             }
         }
         in.end_step();

@@ -1,4 +1,3 @@
-#include "fitsio.h"
 #include <math.h>
 #include <stddef.h>
 #include <stdio.h>
@@ -6,15 +5,12 @@
 
 #include <adios2.h>
 
+// This will work only on 4d images with dimension of polarisation axis 1
 int main(int argc, char *argv[])
 {
-  int status = 0; /* CFITSIO status value MUST be initialized to zero! */
-  int64_t hdutype, naxis;
+  int64_t naxis;
   int64_t naxes[4];
-  float *pix;
 
-  // TODO: use metadata to determine hdu type. Currently assuming that its an Image, not table
-  hdutype = IMAGE_HDU;
   adios2::fstream in("casa.bp", adios2::fstream::in);
 
   adios2::fstep inStep;
@@ -43,35 +39,7 @@ int main(int argc, char *argv[])
     }
     std::cout << std::endl;
 
-    // TODO: Check if both 4d and 3d compatibility is needed
-    // if (status || naxis != 4)
-    // {
-    //   printf("Error: NAXIS = %d.  Only 4-D images are supported.\n", naxis);
-    //   return (1);
-    // }
-
-    if (naxes[2] == 1)
-    {
-      long temp = naxes[2];
-      naxes[2] = naxes[3];
-      naxes[3] = temp;
-    }
-
-    // if (naxes[3] != 1)
-    // {
-    //   printf("Error: Polarisation axis must be 1\n");
-    //   return 1;
-    // }
-
     size_t spat_size = naxes[0] * naxes[1];
-    pix = (float *)malloc(spat_size *
-                          sizeof(float)); /* memory for 1 spatial channel */
-
-    if (pix == NULL)
-    {
-      printf("Memory allocation error\n");
-      return (1);
-    }
 
     printf("#%7s %15s %10s %10s %10s %10s %10s %10s %10s\n", "Channel",
            "Frequency", "Mean", "Std", "Median", "MADFM", "1%ile", "Min",
@@ -80,23 +48,20 @@ int main(int argc, char *argv[])
            "mJy/beam", "mJy/beam", "mJy/beam", "mJy/beam", "mJy/beam",
            "mJy/beam", "mJy/beam");
 
-    const std::vector<float> data = inStep.read<float>("data");
-
-    /* process image one row at a time; increment row # in each loop */
+    /* process image one channel at a time; increment channel # in each loop */
     for (int channel = 0; channel < naxes[2]; channel++)
     {
-      int startIndex = channel * spat_size;
+      const adios2::Dims start = {static_cast<std::size_t>(0), static_cast<std::size_t>(channel), static_cast<std::size_t>(0), static_cast<std::size_t>(0)};
 
-      for (size_t i = 0; i < spat_size; i++)
-      {
-        pix[i] = data[startIndex + i];
-      }
+      const adios2::Dims count = {static_cast<std::size_t>(1), static_cast<std::size_t>(1), static_cast<std::size_t>(naxes[0]), static_cast<std::size_t>(naxes[1])};
+
+      const std::vector<float> data = inStep.read<float>("data", start, count);
 
       float sum = 0., meanval = 0., minval = 1.E33, maxval = -1.E33;
       float valid_pix = 0;
       for (size_t ii = 0; ii < spat_size; ii++)
       {
-        float val = pix[ii];
+        float val = data[ii];
         valid_pix += isnan(val) ? 0 : 1;
         val = isnan(val) ? 0.0 : val;
 
@@ -114,10 +79,6 @@ int main(int argc, char *argv[])
 
       printf("%8d %15.6f %10.3f %10.3f %10.3f %10.3f %10.3f %10.3f %10.3f\n",
              channel, 1.0f, meanval, 0.0f, 0.0f, 0.0f, 0.0f, minval, maxval);
-      // printf("  sum of pixels = %g\n", sum);
-      // printf("  mean value    = %g\n", meanval);
-      // printf("  minimum value = %g\n", minval);
-      // printf("  maximum value = %g\n", maxval);
     }
     in.end_step();
   }
