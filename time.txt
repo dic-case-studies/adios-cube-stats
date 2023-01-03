@@ -1,0 +1,5 @@
+Time elapsed imstat.c : 1168 ms
+Time elapsed imstat_adios.cpp : 4652 ms
+Time elapsed imstat_adios_single_read.cpp : 5259 ms
+Time elapsed imstat_adios_mpi.cpp with n=5 : 1626 ms
+Time elapsed imstat_adios_mpi_less_reads.cpp with n=5 : 1644 ms
