@@ -2,12 +2,12 @@ name: adios_cube_stats
 channels:
   - conda-forge
 dependencies:
-  - adios
-  - astropy
-  - numpy
   - pip
   - python
+  - adios2
+  - astropy
+  - numpy
   - boost
-  - pylab
+  - matplotlib
   - pip:
     - python-casacore

@@ -34,8 +34,10 @@ int main(int argc, char *argv[]) {
     fits_get_img_size(fptr, 4, naxes, &status);
 
     if (status || naxis != 4) {
-      printf("Error: NAXIS = %d.  Only 4-D images are supported.\n", naxis);
-      return (1);
+      // printf("Error: NAXIS = %d.  Only 4-D images are supported.\n", naxis);
+      // return (1);
+      naxis = 4;
+      naxes[3] = 1;
     }
 
     if (naxes[2] == 1) {
