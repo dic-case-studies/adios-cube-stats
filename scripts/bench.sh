@@ -1,6 +1,6 @@
 #! /usr/bin/env bash
 
-rm stats/time.txt 2> /dev/null
+rm stats/time.txt &> /dev/null
 touch stats/time.txt
 mkdir -p stats
 
@@ -8,7 +8,7 @@ set -e
 
 # imstat.c
 startTime=`gdate +%s%3N`;
-./build/imstat.out fits-images/image.cut1000x1000.fits > stats/imstat-result.txt
+./build/imstat.out fits-images/image.cut1000x1000.fits > stats/imstat_result.txt
 endTime=`gdate +%s%3N`;
 diffMilliSeconds="$(($endTime-$startTime))"
 echo "Time elapsed imstat.c : $diffMilliSeconds ms" >> stats/time.txt
