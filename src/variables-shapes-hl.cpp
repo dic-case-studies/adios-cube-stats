@@ -109,10 +109,10 @@ void reader(const int rank, const int size, const std::size_t nx)
 
 // all ranks opening the bp file have access to the entire metadata
 #if ADIOS2_USE_MPI
-    adios2::fstream in("variables-shapes-hl.bp", adios2::fstream::in,
+    adios2::fstream in("variables-shapes-hl.bp", adios2::fstream::in_random_access,
                        MPI_COMM_WORLD);
 #else
-    adios2::fstream in("variables-shapes-hl.bp", adios2::fstream::in);
+    adios2::fstream in("variables-shapes-hl.bp", adios2::fstream::in_random_access);
 #endif
 
     // reading in streaming mode, supported by all engines

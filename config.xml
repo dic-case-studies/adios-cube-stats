@@ -1,11 +1,12 @@
 <?xml version="1.0"?>
 <adios-config>
-  <!-- <io name="HDF5IO">
-
-    <engine type="HDF5">
-    </engine>
-
-    <transport type="Null">
-    </transport>
-  </io> -->
+    <io name="imstat_adios_reader">
+        <engine type="BPFile">
+            <parameter key="Threads" value="0"/>
+        </engine>
+        <transport type="File">
+            <parameter key="Library" value="fstream"/>
+            <parameter key="ProfileUnits" value="Milliseconds"/>
+        </transport>
+    </io>
 </adios-config>

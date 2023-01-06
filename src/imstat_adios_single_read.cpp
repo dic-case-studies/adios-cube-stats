@@ -11,7 +11,7 @@ int main(int argc, char *argv[])
     int64_t naxis;
     int64_t naxes[4];
 
-    adios2::fstream inStream("casa.bp", adios2::fstream::in);
+    adios2::fstream inStream("casa.bp", adios2::fstream::in_random_access);
 
     // get image count of dimensions by reading the BP file variables
     const std::vector<int64_t> s_numAxis = inStream.read<int64_t>("NAXIS");

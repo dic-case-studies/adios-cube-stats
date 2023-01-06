@@ -23,7 +23,7 @@ int main(int argc, char *argv[])
 
     adios2::IO io = adios.DeclareIO("imstat_adios_reader");
     // all ranks opening the bp file have access to the entire metadata
-    adios2::Engine reader = io.Open("casa.bp", adios2::Mode::Read);
+    adios2::Engine reader = io.Open("casa.bp", adios2::Mode::ReadRandomAccess);
 
     // get image count of dimensions by reading the BP file variables
     adios2::Variable<int64_t> s_numAxis =

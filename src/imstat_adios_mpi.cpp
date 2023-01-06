@@ -19,7 +19,7 @@ int main(int argc, char *argv[])
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &size);
 
-    adios2::fstream inStream("casa.bp", adios2::fstream::in,
+    adios2::fstream inStream("casa.bp", adios2::fstream::in_random_access,
                              MPI_COMM_WORLD);
 
     // get image count of dimensions by reading the BP file variables

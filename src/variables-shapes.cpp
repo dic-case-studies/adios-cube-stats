@@ -141,7 +141,7 @@ void reader(adios2::ADIOS &adios, const int rank, const int size)
 
     adios2::IO io = adios.DeclareIO("variables-shapes_reader");
     // all ranks opening the bp file have access to the entire metadata
-    adios2::Engine reader = io.Open("variables-shapes.bp", adios2::Mode::Read);
+    adios2::Engine reader = io.Open("variables-shapes.bp", adios2::Mode::ReadRandomAccess);
 
     // reading in streaming mode
     while (reader.BeginStep() != adios2::StepStatus::EndOfStream)
