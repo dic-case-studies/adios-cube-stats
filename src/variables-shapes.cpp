@@ -25,8 +25,9 @@ void writer(adios2::ADIOS &adios, const std::size_t nx,
             const std::size_t nsteps, const int rank, const int size)
 {
     auto lf_compute = [](const std::size_t step, const std::size_t nx,
-                         const int rank) -> std::vector<float> {
-        const float value = static_cast<float>(step + rank * nx);
+                         const int rank) -> std::vector<float>
+    {
+        const float value = static_cast<float>(100*step + rank * nx);
         std::vector<float> array(nx);
         std::iota(array.begin(), array.end(), value);
         return array;
@@ -111,14 +112,15 @@ void writer(adios2::ADIOS &adios, const std::size_t nx,
                 // Global absolute value
                 writer.Put(varGlobalValueString,
                            std::string("ADIOS2 Basics Variable Example"));
-                // Local absolute value
-                writer.Put(varLocalValueInt32, static_cast<int32_t>(rank));
             }
         }
 
+        // Local value
+        writer.Put(varLocalValueInt32, static_cast<int32_t>(rank));
         // for this example all ranks put a global and a local array
         writer.Put(varGlobalArray, array.data());
         writer.Put(varLocalArray, array.data());
+
         writer.EndStep();
     }
     writer.Close();
@@ -126,6 +128,17 @@ void writer(adios2::ADIOS &adios, const std::size_t nx,
 
 void reader(adios2::ADIOS &adios, const int rank, const int size)
 {
+    auto lf_ArrayToString = [](const std::vector<float> &array) -> std::string
+    {
+        std::string contents = "{ ";
+        for (const float value : array)
+        {
+            contents += std::to_string(static_cast<int>(value)) + " ";
+        }
+        contents += "}";
+        return contents;
+    };
+
     adios2::IO io = adios.DeclareIO("variables-shapes_reader");
     // all ranks opening the bp file have access to the entire metadata
     adios2::Engine reader = io.Open("variables-shapes.bp", adios2::Mode::Read);
@@ -143,15 +156,11 @@ void reader(adios2::ADIOS &adios, const int rank, const int size)
         // check Variable existence
         if (varStep)
         {
-            if (rank == 0)
+            reader.Get(varStep, step, adios2::Mode::Sync);
             {
-                // variable objects are "printable" reporting Name and Type
-                std::cout << "Found Global Value " << varStep << " in step "
-                          << currentStep << "\n";
-                // output: Found Global Value Variable<uint64_t>(Name: "Step")
-                // in step 0
+                std::cout << "Found Global Value " << step << " in step "
+                          << currentStep << " ProcessRank " << rank <<"\n";
             }
-            reader.Get(varStep, step);
         }
 
         // GlobalValueString
@@ -169,20 +178,20 @@ void reader(adios2::ADIOS &adios, const int rank, const int size)
             reader.Get(varGlobalValueString, globalValueString);
         }
 
-        // Global Arrays at read from local values at write
-        adios2::Variable<int32_t> varRanks =
-            io.InquireVariable<int32_t>("Ranks");
-        std::vector<int32_t> ranks;
-        if (varRanks)
+        // Reading a local value
+        adios2::Variable<int32_t> varRank =
+            io.InquireVariable<int32_t>("Rank");
+        std::vector<int32_t> vec_rank;
+        if (varRank)
         {
-            if (rank == 0)
-            {
-                std::cout << "Found Global Array " << varRanks << " in step "
-                          << currentStep << "\n";
-            }
             // passing a vector convenience: adios2 would resize it
             // automatically
-            reader.Get(varRanks, ranks);
+            varRank.SetBlockSelection(rank);
+            reader.Get(varRank, vec_rank, adios2::Mode::Sync);
+            // if (rank == 0)
+            {
+                std::cout << "Found local variable Rank " << vec_rank[0] << " in step " << currentStep << "\n";
+            }
         }
 
         // Global Array
@@ -191,12 +200,14 @@ void reader(adios2::ADIOS &adios, const int rank, const int size)
         std::vector<float> globalArray;
         if (varGlobalArray)
         {
+            // Blocks are optional for global arrays
+            // varGlobalArray.SetBlockSelection(rank);
+            reader.Get(varGlobalArray, globalArray, adios2::Mode::Sync);
             if (rank == 0)
             {
-                std::cout << "Found GlobalArray " << varGlobalArray
+                std::cout << "Found GlobalArray " << lf_ArrayToString(globalArray)
                           << " in step " << currentStep << "\n";
             }
-            reader.Get(varGlobalArray, globalArray);
         }
 
         // Local Array
@@ -206,14 +217,13 @@ void reader(adios2::ADIOS &adios, const int rank, const int size)
         if (varLocalArray)
         {
             // local arrays require an extra step to select the block of
-            // interest (0 is default) we only select block 0 in this example
-            varLocalArray.SetBlockSelection(0);
+            // interest (0 is default)
+            varLocalArray.SetBlockSelection(1);
+            reader.Get(varLocalArray, localArray, adios2::Mode::Sync);
             if (rank == 0)
             {
-                std::cout << "Found LocalArray " << varLocalArray << " in step "
-                          << currentStep << "\n";
+                std::cout << "Found LocalArray " << lf_ArrayToString(localArray) << " in step " << currentStep << "\n";
             }
-            reader.Get(varLocalArray, localArray);
         }
 
         // since all Get calls are "deferred" all the data would be populated at
@@ -254,8 +264,8 @@ int main(int argc, char *argv[])
         adios2::ADIOS adios;
 #endif
 
-        constexpr std::size_t nx = 10;
-        constexpr std::size_t nsteps = 3;
+        constexpr std::size_t nx = 5;
+        constexpr std::size_t nsteps = 2;
 
         writer(adios, nx, nsteps, rank, size);
         reader(adios, rank, size);

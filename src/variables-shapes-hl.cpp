@@ -24,8 +24,9 @@ void writer(const std::size_t nx, const std::size_t nsteps, const int rank,
             const int size)
 {
     auto lf_compute = [](const std::size_t step, const std::size_t nx,
-                         const int rank) -> std::vector<float> {
-        const float value = static_cast<float>(step + rank * nx);
+                         const int rank) -> std::vector<float>
+    {
+        const float value = static_cast<float>(100*step + rank * nx);
         std::vector<float> array(nx);
         std::iota(array.begin(), array.end(), value);
         return array;
@@ -52,10 +53,10 @@ void writer(const std::size_t nx, const std::size_t nsteps, const int rank,
     // SetSelection (read) make sure you always pass std::size_t types
 
 #if ADIOS2_USE_MPI
-    adios2::fstream out("variables-shapes_hl.bp", adios2::fstream::out,
+    adios2::fstream out("variables-shapes-hl.bp", adios2::fstream::out,
                         MPI_COMM_WORLD);
 #else
-    adios2::fstream out("variables-shapes_hl.bp", adios2::fstream::out);
+    adios2::fstream out("variables-shapes-hl.bp", adios2::fstream::out);
 #endif
 
     for (size_t step = 0; step < nsteps; ++step)
@@ -77,12 +78,12 @@ void writer(const std::size_t nx, const std::size_t nsteps, const int rank,
                 // Constant Global value
                 out.write("GlobalValueString",
                           std::string("ADIOS2 Basics Variable Example"));
-
-                // Constant Local value
-                out.write("LocalValueInt32", static_cast<int32_t>(rank),
-                          adios2::LocalValue);
             }
         }
+
+        // Constant Local value
+        out.write("Rank", static_cast<int32_t>(rank),
+                  adios2::LocalValue);
 
         // for this example all ranks write a global and a local array
         out.write("GlobalArray", array.data(), shape, start, count);
@@ -93,9 +94,10 @@ void writer(const std::size_t nx, const std::size_t nsteps, const int rank,
     out.close();
 }
 
-void reader(const int rank, const int size)
+void reader(const int rank, const int size, const std::size_t nx)
 {
-    auto lf_ArrayToString = [](const std::vector<float> &array) -> std::string {
+    auto lf_ArrayToString = [](const std::vector<float> &array) -> std::string
+    {
         std::string contents = "{ ";
         for (const float value : array)
         {
@@ -107,10 +109,10 @@ void reader(const int rank, const int size)
 
 // all ranks opening the bp file have access to the entire metadata
 #if ADIOS2_USE_MPI
-    adios2::fstream in("variables-shapes_hl.bp", adios2::fstream::in,
+    adios2::fstream in("variables-shapes-hl.bp", adios2::fstream::in,
                        MPI_COMM_WORLD);
 #else
-    adios2::fstream in("variables-shapes_hl.bp", adios2::fstream::in);
+    adios2::fstream in("variables-shapes-hl.bp", adios2::fstream::in);
 #endif
 
     // reading in streaming mode, supported by all engines
@@ -135,11 +137,12 @@ void reader(const int rank, const int size)
                       << " in currentStep " << currentStep << "\n";
         }
 
-        const std::vector<int32_t> ranks = inStep.read<int32_t>("Ranks");
+        // use block selection to access local values of other processes
+        // NOTE: Due to conflicting overloaded methods, we can not access other local values. Need to figure out. This issue is only in High-level API
+        const std::vector<int32_t> ranks = inStep.read<int32_t>("Rank");
         if (!ranks.empty() && rank == 0)
         {
-            std::cout << "Found rank " << ranks.front() << " in currentStep "
-                      << currentStep << "\n";
+            std::cout << "Found (Local Value) Rank " << ranks.front() << " in currentStep " << currentStep << "for MPI_rank " << rank << "\n";
         }
 
         const std::vector<float> globalArray =
@@ -151,9 +154,15 @@ void reader(const int rank, const int size)
                       << currentStep << "\n";
         }
 
-        // default reads block 0
-        const std::vector<float> localArray = inStep.read<float>("LocalArray");
-        if (!localArray.empty() && rank == 0)
+        // default reads block 0, block needs to be specified for local arrays
+        // NOTE: Due to conflicting overloaded methods, here we are passing start and count to resolve conflict. But its not really required to access local arrays
+        adios2::Dims start = {static_cast<std::size_t>(0)};
+        adios2::Dims count = {nx};
+        
+        const std::vector<float> localArray = inStep.read<float>("LocalArray", start, count, static_cast<std::size_t>(rank));
+
+        // change rank in following condition to see different local arrays
+        if (!localArray.empty() && rank == 1)
         {
             std::cout << "Found localArray "
                       << lf_ArrayToString(localArray) + " in currentStep "
@@ -180,11 +189,11 @@ int main(int argc, char *argv[])
 
     try
     {
-        constexpr std::size_t nx = 10;
+        constexpr std::size_t nx = 5;
         constexpr std::size_t nsteps = 3;
 
         writer(nx, nsteps, rank, size);
-        reader(rank, size);
+        reader(rank, size, nx);
     }
     catch (std::exception &e)
     {
