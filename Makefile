@@ -19,8 +19,8 @@ SRC = imstat.out \
 	  imstat_adios_single_read_ll.out \
 	  imstat_adios_mpi.out \
 	  imstat_adios_mpi_ll.out \
-	  imstat_adios_mpi_less_reads.out \
-	  imstat_adios_mpi_less_reads_ll.out \
+	  imstat_adios_mpi_grouped_reads.out \
+	  imstat_adios_mpi_grouped_reads_ll.out \
 
 all: $(SRC)
 
