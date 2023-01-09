@@ -2,15 +2,18 @@
 #include <stddef.h>
 #include <stdio.h>
 #include <string.h>
-#include <mpi.h>
 
 #include <adios2.h>
+#include <mpi.h>
+
+#include "helper.hpp"
+
 
 // This will work only on 4d images with dimension of polarisation axis 1
 int main(int argc, char *argv[])
 {
-    int64_t naxis;
-    int64_t naxes[4];
+    int naxis;
+    int naxes[4];
 
     MPI_Init(&argc, &argv);
 
@@ -22,19 +25,18 @@ int main(int argc, char *argv[])
     adios2::fstream inStream("casa.bp", adios2::fstream::in_random_access,
                              MPI_COMM_WORLD);
 
-    // get image count of dimensions by reading the BP file variables
-    const std::vector<int64_t> s_numAxis = inStream.read<int64_t>("NAXIS");
-    naxis = s_numAxis.front();
-
-    // get image dimensions by reading the BP file variables
-    for (int i = 1; i <= naxis; i++)
+    if (rank == 0)
     {
-        std::string search_var = "NAXIS" + std::to_string(i);
-        const std::vector<int64_t> s_axis = inStream.read<int64_t>(search_var);
-
-        naxes[i - 1] = s_axis.front();
+        getImageDimensions(inStream, naxis, naxes);
+        // using MPI_Bcast, no way to define tags
+        MPI_Bcast(&naxis, 1, MPI_INT, 0, MPI_COMM_WORLD);
+        MPI_Bcast(naxes, 4, MPI_INT, 0, MPI_COMM_WORLD);
     }
-
+    else
+    {
+        MPI_Bcast(&naxis, 1, MPI_INT, 0, MPI_COMM_WORLD);
+        MPI_Bcast(naxes, 4, MPI_INT, 0, MPI_COMM_WORLD);
+    }
     size_t spat_size = naxes[0] * naxes[1];
 
     if (rank == 0)

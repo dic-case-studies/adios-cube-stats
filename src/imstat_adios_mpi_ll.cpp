@@ -1,10 +1,11 @@
-#include <math.h>
 #include <stddef.h>
 #include <stdio.h>
 #include <string.h>
-#include <mpi.h>
 
 #include <adios2.h>
+#include <mpi.h>
+
+#include "helper.hpp"
 
 // This will work only on 4d images with dimension of polarisation axis 1
 int main(int argc, char *argv[])
@@ -29,10 +30,7 @@ int main(int argc, char *argv[])
     adios2::Variable<int64_t> s_numAxis =
         io.InquireVariable<int64_t>("NAXIS");
 
-    if (s_numAxis)
-    {
-        reader.Get(s_numAxis, naxis, adios2::Mode::Sync);
-    }
+    reader.Get(s_numAxis, naxis, adios2::Mode::Sync);
 
     // get image dimensions by reading the BP file variables
     for (int i = 1; i <= naxis; i++)
@@ -42,10 +40,7 @@ int main(int argc, char *argv[])
         adios2::Variable<int64_t> s_axis =
             io.InquireVariable<int64_t>(search_var);
 
-        if (s_axis)
-        {
-            reader.Get(s_axis, naxes[i - 1], adios2::Mode::Sync);
-        }
+        reader.Get(s_axis, naxes[i - 1], adios2::Mode::Sync);
     }
 
     size_t spat_size = naxes[0] * naxes[1];
@@ -78,29 +73,7 @@ int main(int argc, char *argv[])
                 reader.Get(varData, data, adios2::Mode::Sync);
             }
 
-            float sum = 0., meanval = 0., minval = 1.E33, maxval = -1.E33;
-            float valid_pix = 0;
-
-            for (size_t ii = 0; ii < spat_size; ii++)
-            {
-                float val = data[ii];
-                valid_pix += isnan(val) ? 0 : 1;
-                val = isnan(val) ? 0.0 : val;
-
-                sum += val; /* accumlate sum */
-                if (val < minval)
-                    minval = val; /* find min and  */
-                if (val > maxval)
-                    maxval = val; /* max values    */
-            }
-            meanval = sum / valid_pix;
-
-            meanval *= 1000.0;
-            minval *= 1000.0;
-            maxval *= 1000.0;
-
-            printf("%8d %15.6f %10.3f %10.3f %10.3f %10.3f %10.3f %10.3f %10.3f\n",
-                   channel + 1, 1.0f, meanval, 0.0f, 0.0f, 0.0f, 0.0f, minval, maxval);
+            printImageStats(data, spat_size, channel);
         }
     }
 

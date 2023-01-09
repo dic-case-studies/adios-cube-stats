@@ -6,7 +6,7 @@
 #include <adios2.h>
 
 // This will work only on 4d images with dimension of polarisation axis 1
-int main(int argc, char *argv[])
+int main(void)
 {
   int64_t naxis;
   int64_t naxes[4];
@@ -19,10 +19,8 @@ int main(int argc, char *argv[])
   // get image count of dimensions by reading the BP file variables
   adios2::Variable<int64_t> s_numAxis =
       io.InquireVariable<int64_t>("NAXIS");
-  if (s_numAxis)
-  {
-    reader.Get(s_numAxis, naxis, adios2::Mode::Sync);
-  }
+
+  reader.Get(s_numAxis, naxis, adios2::Mode::Sync);
 
   // get image dimensions by reading the BP file variables
   for (int i = 1; i <= naxis; i++)
@@ -30,10 +28,8 @@ int main(int argc, char *argv[])
     std::string search_var = "NAXIS" + std::to_string(i);
     adios2::Variable<int64_t> s_axis =
         io.InquireVariable<int64_t>(search_var);
-    if (s_axis)
-    {
-      reader.Get(s_axis, naxes[i - 1], adios2::Mode::Sync);
-    }
+
+    reader.Get(s_axis, naxes[i - 1], adios2::Mode::Sync);
   }
   std::cout << std::endl;
 

@@ -7,8 +7,8 @@
 int main(int argc, char *argv[]) {
   fitsfile *fptr; /* FITS file pointer */
   int status = 0; /* CFITSIO status value MUST be initialized to zero! */
-  int hdutype, naxis, ii;
-  long naxes[4], totpix, fpixel[4];
+  int hdutype, naxis;
+  long naxes[4], fpixel[4];
   double *pix;
 
   if (argc != 2) {
@@ -60,8 +60,6 @@ int main(int argc, char *argv[]) {
       return (1);
     }
 
-    // TODO: remove totpix, not used
-    totpix = naxes[0] * naxes[1] * naxes[2] * naxes[3];
     fpixel[0] = 1; /* read starting with first pixel in each row */
     fpixel[1] = 1;
     fpixel[3] = 1; /* Polarisation axis */
@@ -94,7 +92,7 @@ int main(int argc, char *argv[]) {
 
       double sum = 0., meanval = 0., minval = 1.E33, maxval = -1.E33;
       double valid_pix = 0;
-      for (ii = 0; ii < spat_size; ii++) {
+      for (size_t ii = 0; ii < spat_size; ii++) {
         float val = pix[ii];
         valid_pix += isnan(val) ? 0 : 1;
         val = isnan(val) ? 0.0 : val;

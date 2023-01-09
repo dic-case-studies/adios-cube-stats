@@ -31,7 +31,7 @@ all: $(SRC)
 	$(CXX) -o build/$@ $< $(CXXFLAGS) $(OPT) $(ADIOS)
 
 clean:
-	rm -rf build/*.out
+	rm -rf build/*
 
 dir:
 	mkdir -p build
