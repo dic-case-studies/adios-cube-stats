@@ -8,7 +8,6 @@
 
 #include "helper.hpp"
 
-
 // This will work only on 4d images with dimension of polarisation axis 1
 int main(int argc, char *argv[])
 {
@@ -37,6 +36,7 @@ int main(int argc, char *argv[])
         MPI_Bcast(&naxis, 1, MPI_INT, 0, MPI_COMM_WORLD);
         MPI_Bcast(naxes, 4, MPI_INT, 0, MPI_COMM_WORLD);
     }
+
     size_t spat_size = naxes[0] * naxes[1];
 
     if (rank == 0)

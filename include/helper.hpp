@@ -47,6 +47,33 @@ void getImageDimensions(adios2::fstream &inStream, int &naxis, int* naxes)
     }
 }
 
+void getImageDimensions_ll(adios2::IO io, adios2::Engine reader, int &naxis, int* naxes)
+{
+    // get image count of dimensions by reading the BP file variables
+    adios2::Variable<int64_t> s_numAxis =
+        io.InquireVariable<int64_t>("NAXIS");
+
+    int64_t naxis_t;
+    reader.Get(s_numAxis, naxis_t, adios2::Mode::Sync);
+    naxis = static_cast<int>(naxis_t);
+
+    // get image dimensions by reading the BP file variables
+    for (int i = 1; i <= naxis; i++)
+    {
+        std::string search_var = "NAXIS" + std::to_string(i);
+
+        adios2::Variable<int64_t> s_axis =
+            io.InquireVariable<int64_t>(search_var);
+
+        int64_t axis_t;    
+        reader.Get(s_axis, axis_t, adios2::Mode::Sync);
+
+        naxes[i-1] = static_cast<int>(axis_t);
+    }
+}
+
+
+
 void printImageStats(const std::vector<float> &data, size_t spat_size, int channel)
 {
     float sum = 0., meanval = 0., minval = 1.E33, maxval = -1.E33;

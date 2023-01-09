@@ -123,9 +123,6 @@ int main(int argc, char *argv[]) {
 
   if (status) {
     fits_report_error(stderr, status); /* print any error message */
-  } else {
-    fprintf(stderr, "Statistics of %ld x %ld x %ld x %ld  image\n", naxes[0], naxes[1],
-           naxes[2], naxes[3]);
   }
 
   return (status);

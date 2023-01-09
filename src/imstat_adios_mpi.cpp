@@ -23,7 +23,8 @@ int main(int argc, char *argv[])
     adios2::fstream inStream("casa.bp", adios2::fstream::in_random_access,
                              MPI_COMM_WORLD);
 
-    if(rank == 0) {
+    if (rank == 0)
+    {
         getImageDimensions(inStream, naxis, naxes);
         // using MPI_Bcast, no way to define tags
         MPI_Bcast(&naxis, 1, MPI_INT, 0, MPI_COMM_WORLD);
@@ -33,10 +34,11 @@ int main(int argc, char *argv[])
         // broadcast(&naxis, 1, MPI_INT, 0, MPI_COMM_WORLD, 0);
         // broadcast(naxes, 4, MPI_INT, 0, MPI_COMM_WORLD, 1);
     }
-    else{
+    else
+    {
         MPI_Bcast(&naxis, 1, MPI_INT, 0, MPI_COMM_WORLD);
         MPI_Bcast(naxes, 4, MPI_INT, 0, MPI_COMM_WORLD);
-        
+
         // broadcast(&naxis, 1, MPI_INT, 0, MPI_COMM_WORLD, 0);
         // broadcast(naxes, 4, MPI_INT, 0, MPI_COMM_WORLD, 1);
     }
@@ -65,7 +67,6 @@ int main(int argc, char *argv[])
             std::vector<float> data = inStream.read<float>("data", start, count);
 
             printImageStats(data, spat_size, channel);
-            
         }
     }
 
