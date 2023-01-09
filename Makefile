@@ -1,4 +1,4 @@
-CXXFLAGS=-std=c++14 -Wall -Wextra -pedantic -O3
+CXXFLAGS=-std=c++14 -Wall -Wextra -pedantic -O3 -I include/
 
 CFLAGS=-std=c99 -Wall -Wextra -pedantic -O3 
 
