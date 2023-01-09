@@ -2,12 +2,14 @@ name: adios_cube_stats
 channels:
   - conda-forge
 dependencies:
+  - python=3.9.13
   - pip
-  - python
-  - adios2
   - astropy
   - numpy
   - boost
   - matplotlib
+  - compilers
+  - openmpi
+  - adios2 # no-mpi version
   - pip:
     - python-casacore
