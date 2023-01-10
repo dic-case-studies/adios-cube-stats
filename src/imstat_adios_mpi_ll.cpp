@@ -55,7 +55,7 @@ int main(int argc, char *argv[])
             varData.SetSelection(selection);
             reader.Get(varData, data, adios2::Mode::Sync);
 
-            printImageStats(data, spat_size, channel);
+            printImageStats(data, 0, spat_size, channel + 1);
         }
     }
 

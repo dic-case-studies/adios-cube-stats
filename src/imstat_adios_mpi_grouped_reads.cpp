@@ -58,30 +58,7 @@ int main(int argc, char *argv[])
     /* process image one channel at a time; increment channel # in each loop */
     for (int64_t channel = 0; channel < channelsToRead; channel++)
     {
-
-        float sum = 0., meanval = 0., minval = 1.E33, maxval = -1.E33;
-        float valid_pix = 0;
-
-        for (size_t ii = channel * spat_size; ii < (channel + 1) * spat_size; ii++)
-        {
-            float val = data[ii];
-            valid_pix += isnan(val) ? 0 : 1;
-            val = isnan(val) ? 0.0 : val;
-
-            sum += val; /* accumlate sum */
-            if (val < minval)
-                minval = val; /* find min and  */
-            if (val > maxval)
-                maxval = val; /* max values    */
-        }
-        meanval = sum / valid_pix;
-
-        meanval *= 1000.0;
-        minval *= 1000.0;
-        maxval *= 1000.0;
-
-        printf("%8lld %15.6f %10.3f %10.3f %10.3f %10.3f %10.3f %10.3f %10.3f\n",
-               startChannel + channel + 1, 1.0f, meanval, 0.0f, 0.0f, 0.0f, 0.0f, minval, maxval);
+        printImageStats(data, channel * spat_size, (channel + 1) * spat_size, startChannel + channel + 1);
     }
 
     inStream.close();

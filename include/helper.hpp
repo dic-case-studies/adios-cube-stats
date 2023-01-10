@@ -45,12 +45,12 @@ void getImageDimensions_ll(adios2::IO io, adios2::Engine reader, int64_t &naxis,
   }
 }
 
-void printImageStats(const std::vector<float> &data, size_t spat_size, int channel)
+void printImageStats(const std::vector<float> &data, size_t start, size_t end, int64_t channelID)
 {
   float sum = 0., meanval = 0., minval = 1.E33, maxval = -1.E33;
   float valid_pix = 0;
 
-  for (size_t ii = 0; ii < spat_size; ii++)
+  for (size_t ii = start; ii < end; ii++)
   {
     float val = data[ii];
     valid_pix += isnan(val) ? 0 : 1;
@@ -68,8 +68,8 @@ void printImageStats(const std::vector<float> &data, size_t spat_size, int chann
   minval *= 1000.0;
   maxval *= 1000.0;
 
-  printf("%8d %15.6f %10.3f %10.3f %10.3f %10.3f %10.3f %10.3f %10.3f\n",
-         channel + 1, 1.0f, meanval, 0.0f, 0.0f, 0.0f, 0.0f, minval, maxval);
+  printf("%8lld %15.6f %10.3f %10.3f %10.3f %10.3f %10.3f %10.3f %10.3f\n",
+         channelID, 1.0f, meanval, 0.0f, 0.0f, 0.0f, 0.0f, minval, maxval);
 }
 
 #endif

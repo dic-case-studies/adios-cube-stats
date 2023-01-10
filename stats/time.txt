@@ -1,9 +1,0 @@
-Time elapsed imstat.c : 759 ms
-Time elapsed imstat_adios.cpp : 693 ms
-Time elapsed imstat_adios_single_read.cpp : 1048 ms
-Time elapsed imstat_adios_ll.cpp : 660 ms
-Time elapsed imstat_adios_single_read_ll.cpp : 849 ms
-Time elapsed imstat_adios_mpi.cpp : 439 ms
-Time elapsed imstat_adios_mpi_less_reads.cpp : 545 ms
-Time elapsed imstat_adios_mpi_ll.cpp : 412 ms
-Time elapsed imstat_adios_mpi_less_reads_ll.cpp : 483 ms

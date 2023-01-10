@@ -48,7 +48,7 @@ int main(int argc, char *argv[])
 
             std::vector<float> data = inStream.read<float>("data", start, count);
 
-            printImageStats(data, spat_size, channel);
+            printImageStats(data, 0, spat_size, channel + 1);
         }
     }
 

@@ -44,7 +44,7 @@ int main(void)
       reader.Get(varData, data, adios2::Mode::Sync);
     }
 
-    printImageStats(data, spat_size, channel);
+    printImageStats(data, 0, spat_size, channel + 1);
   }
 
   reader.Close();
