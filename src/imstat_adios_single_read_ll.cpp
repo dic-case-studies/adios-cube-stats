@@ -10,8 +10,8 @@
 // This will work only on 4d images with dimension of polarisation axis 1
 int main(void)
 {
-  int naxis;
-  int naxes[4];
+  int64_t naxis;
+  int64_t naxes[4];
   adios2::ADIOS adios;
 
   adios2::IO io = adios.DeclareIO("imstat_adios_reader");
@@ -31,13 +31,10 @@ int main(void)
 
   adios2::Variable<float> varData = io.InquireVariable<float>("data");
   std::vector<float> data;
-  if (varData)
-  {
-    reader.Get(varData, data, adios2::Mode::Sync);
-  }
+  reader.Get(varData, data, adios2::Mode::Sync);
 
   /* process image one channel at a time; increment channel # in each loop */
-  for (int channel = 0; channel < naxes[2]; channel++)
+  for (int64_t channel = 0; channel < naxes[2]; channel++)
   {
     float sum = 0., meanval = 0., minval = 1.E33, maxval = -1.E33;
     float valid_pix = 0;
@@ -59,7 +56,7 @@ int main(void)
     minval *= 1000.0;
     maxval *= 1000.0;
 
-    printf("%8d %15.6f %10.3f %10.3f %10.3f %10.3f %10.3f %10.3f %10.3f\n",
+    printf("%8lld %15.6f %10.3f %10.3f %10.3f %10.3f %10.3f %10.3f %10.3f\n",
            channel + 1, 1.0f, meanval, 0.0f, 0.0f, 0.0f, 0.0f, minval, maxval);
   }
 

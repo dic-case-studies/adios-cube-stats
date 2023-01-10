@@ -9,8 +9,8 @@
 // This will work only on 4d images with dimension of polarisation axis 1
 int main(void)
 {
-  int naxis;
-  int naxes[4];
+  int64_t naxis;
+  int64_t naxes[4];
 
   adios2::fstream inStream("casa.bp", adios2::fstream::in_random_access);
 
@@ -26,7 +26,7 @@ int main(void)
          "mJy/beam", "mJy/beam");
 
   /* process image one channel at a time; increment channel # in each loop */
-  for (int channel = 0; channel < naxes[2]; channel++)
+  for (int64_t channel = 0; channel < naxes[2]; channel++)
   {
     const adios2::Dims start = {static_cast<std::size_t>(0), static_cast<std::size_t>(channel), static_cast<std::size_t>(0), static_cast<std::size_t>(0)};
 

@@ -11,8 +11,8 @@
 // This will work only on 4d images with dimension of polarisation axis 1
 int main(int argc, char *argv[])
 {
-    int naxis;
-    int naxes[4];
+    int64_t naxis;
+    int64_t naxes[4];
 
     MPI_Init(&argc, &argv);
 
@@ -24,18 +24,7 @@ int main(int argc, char *argv[])
     adios2::fstream inStream("casa.bp", adios2::fstream::in_random_access,
                              MPI_COMM_WORLD);
 
-    if (rank == 0)
-    {
-        getImageDimensions(inStream, naxis, naxes);
-        // using MPI_Bcast, no way to define tags
-        MPI_Bcast(&naxis, 1, MPI_INT, 0, MPI_COMM_WORLD);
-        MPI_Bcast(naxes, 4, MPI_INT, 0, MPI_COMM_WORLD);
-    }
-    else
-    {
-        MPI_Bcast(&naxis, 1, MPI_INT, 0, MPI_COMM_WORLD);
-        MPI_Bcast(naxes, 4, MPI_INT, 0, MPI_COMM_WORLD);
-    }
+    getImageDimensions(inStream, naxis, naxes);
 
     size_t spat_size = naxes[0] * naxes[1];
 
@@ -49,27 +38,25 @@ int main(int argc, char *argv[])
                "mJy/beam", "mJy/beam");
     }
 
-    int quot = naxes[2] / size;
-    int channelsToRead = quot;
-    int startOffset = 0;
-    int rem = naxes[2] % size;
+    int64_t quot = naxes[2] / size;
+    int64_t channelsToRead = quot;
+    int64_t startOffset = 0;
+    int64_t rem = naxes[2] % size;
     if (rank >= size - rem)
     {
         channelsToRead = channelsToRead + 1;
         startOffset = rem - (size - rank);
     }
-    int startChannel = rank * quot + startOffset;
+    int64_t startChannel = rank * quot + startOffset;
 
     const adios2::Dims start = {static_cast<std::size_t>(0), static_cast<std::size_t>(startChannel), static_cast<std::size_t>(0), static_cast<std::size_t>(0)};
 
     const adios2::Dims count = {static_cast<std::size_t>(1), static_cast<std::size_t>(channelsToRead), static_cast<std::size_t>(naxes[0]), static_cast<std::size_t>(naxes[1])};
 
-    // std::cout << "Rank: " << rank << "startChannel: " << startChannel << "channelsToRead: " << channelsToRead << std::endl;
-
     const std::vector<float> data = inStream.read<float>("data", start, count);
 
     /* process image one channel at a time; increment channel # in each loop */
-    for (int channel = 0; channel < channelsToRead; channel++)
+    for (int64_t channel = 0; channel < channelsToRead; channel++)
     {
 
         float sum = 0., meanval = 0., minval = 1.E33, maxval = -1.E33;
@@ -93,7 +80,7 @@ int main(int argc, char *argv[])
         minval *= 1000.0;
         maxval *= 1000.0;
 
-        printf("%8d %15.6f %10.3f %10.3f %10.3f %10.3f %10.3f %10.3f %10.3f\n",
+        printf("%8lld %15.6f %10.3f %10.3f %10.3f %10.3f %10.3f %10.3f %10.3f\n",
                startChannel + channel + 1, 1.0f, meanval, 0.0f, 0.0f, 0.0f, 0.0f, minval, maxval);
     }
 

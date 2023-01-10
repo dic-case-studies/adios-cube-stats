@@ -10,8 +10,8 @@
 // This will work only on 4d images with dimension of polarisation axis 1
 int main(int argc, char *argv[])
 {
-    int naxis;
-    int naxes[4];
+    int64_t naxis;
+    int64_t naxes[4];
 
     MPI_Init(&argc, &argv);
 
@@ -26,25 +26,7 @@ int main(int argc, char *argv[])
     // all ranks opening the bp file have access to the entire metadata
     adios2::Engine reader = io.Open("casa.bp", adios2::Mode::ReadRandomAccess);
 
-    if (rank == 0)
-    {
-        getImageDimensions_ll(io, reader, naxis, naxes);
-        // using MPI_Bcast, no way to define tags
-        MPI_Bcast(&naxis, 1, MPI_INT, 0, MPI_COMM_WORLD);
-        MPI_Bcast(naxes, 4, MPI_INT, 0, MPI_COMM_WORLD);
-
-        // using custom broadcast method, with tags
-        // broadcast(&naxis, 1, MPI_INT, 0, MPI_COMM_WORLD, 0);
-        // broadcast(naxes, 4, MPI_INT, 0, MPI_COMM_WORLD, 1);
-    }
-    else
-    {
-        MPI_Bcast(&naxis, 1, MPI_INT, 0, MPI_COMM_WORLD);
-        MPI_Bcast(naxes, 4, MPI_INT, 0, MPI_COMM_WORLD);
-
-        // broadcast(&naxis, 1, MPI_INT, 0, MPI_COMM_WORLD, 0);
-        // broadcast(naxes, 4, MPI_INT, 0, MPI_COMM_WORLD, 1);
-    }
+    getImageDimensions_ll(io, reader, naxis, naxes);
 
     size_t spat_size = naxes[0] * naxes[1];
 
@@ -59,7 +41,7 @@ int main(int argc, char *argv[])
     }
 
     /* process image one channel at a time; increment channel # in each loop */
-    for (int channel = 0; channel < naxes[2]; channel++)
+    for (int64_t channel = 0; channel < naxes[2]; channel++)
     {
         if (channel % size == rank)
         {
@@ -69,12 +51,9 @@ int main(int argc, char *argv[])
 
             adios2::Variable<float> varData = io.InquireVariable<float>("data");
             std::vector<float> data;
-            if (varData)
-            {
-                adios2::Box<adios2::Dims> selection = {start, count};
-                varData.SetSelection(selection);
-                reader.Get(varData, data, adios2::Mode::Sync);
-            }
+            adios2::Box<adios2::Dims> selection = {start, count};
+            varData.SetSelection(selection);
+            reader.Get(varData, data, adios2::Mode::Sync);
 
             printImageStats(data, spat_size, channel);
         }

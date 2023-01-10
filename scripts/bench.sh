@@ -19,6 +19,7 @@ startTime=`gdate +%s%3N`;
 endTime=`gdate +%s%3N`;
 diffMilliSeconds="$(($endTime-$startTime))"
 echo "Time elapsed imstat.c : $diffMilliSeconds ms" >> stats/${host}/time.txt
+echo "Done with imstat.c"
 
 declare -a FILES=(imstat_adios imstat_adios_single_read imstat_adios_ll imstat_adios_single_read_ll)
 for file in ${FILES[@]}
@@ -29,9 +30,10 @@ do
 
     diffMilliSeconds="$(($endTime-$startTime))"
     echo "Time elapsed $file.cpp : $diffMilliSeconds ms" >> stats/${host}/time.txt
+    echo "Done with ${file}"
 done
 
-declare -a MPI_FILES=(imstat_adios_mpi imstat_adios_mpi_less_reads imstat_adios_mpi_ll imstat_adios_mpi_less_reads_ll)
+declare -a MPI_FILES=(imstat_adios_mpi imstat_adios_mpi_grouped_reads imstat_adios_mpi_ll imstat_adios_mpi_grouped_reads_ll)
 for file in ${MPI_FILES[@]}
 do
     startTime=`gdate +%s%3N`;
@@ -40,4 +42,5 @@ do
 
     diffMilliSeconds="$(($endTime-$startTime))"
     echo "Time elapsed $file.cpp : $diffMilliSeconds ms" >> stats/${host}/time.txt
+    echo "Done with ${file}"
 done
