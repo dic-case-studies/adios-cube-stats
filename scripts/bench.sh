@@ -21,6 +21,15 @@ diffMilliSeconds="$(($endTime-$startTime))"
 echo "Time elapsed imstat.c : $diffMilliSeconds ms" >> stats/${host}/time.txt
 echo "Done with imstat.c"
 
+# imstat_mpi.cpp
+startTime=`gdate +%s%3N`;
+mpiexec -n 5 ./build/imstat_mpi.out fits-images/image.cut1000x1000.fits > stats/${host}/imstat_mpi_result.txt
+endTime=`gdate +%s%3N`;
+diffMilliSeconds="$(($endTime-$startTime))"
+echo "Time elapsed imstat_mpi.c : $diffMilliSeconds ms" >> stats/${host}/time.txt
+echo "Done with imstat_mpi.c"
+
+
 declare -a FILES=(imstat_adios imstat_adios_single_read imstat_adios_ll imstat_adios_single_read_ll)
 for file in ${FILES[@]}
 do

@@ -15,7 +15,7 @@ filename = sys.argv[1]
 
 os.system("rm -rf casa.bp")
 
-with adios2.open("casa.bp", "w", "BP5") as fh:
+with adios2.open("casa.bp", "w") as fh:
 
     # Convert the FITS into a BP file
     with fits.open(filename) as hdul:

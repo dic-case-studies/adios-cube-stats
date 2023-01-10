@@ -13,6 +13,7 @@ CXX=mpicxx
 CC=gcc
 
 SRC = imstat.out \
+      imstat_mpi.out \
 	  imstat_adios.out \
 	  imstat_adios_ll.out \
 	  imstat_adios_single_read.out \
@@ -28,7 +29,7 @@ all: $(SRC)
 	$(CC) -o build/$@ $< $(CFLAGS) $(OPT) $(CFITSIO)
 
 %.out: src/%.cpp dir
-	$(CXX) -o build/$@ $< $(CXXFLAGS) $(OPT) $(ADIOS)
+	$(CXX) -o build/$@ $< $(CXXFLAGS) $(OPT) $(ADIOS) $(CFITSIO)
 
 clean:
 	rm -rf build/*
