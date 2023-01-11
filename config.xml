@@ -12,4 +12,16 @@
             <parameter key="Library" value="POSIX"/>
         </transport>
     </io>
+    <io name="imstat_adios_writer">
+        <engine type="BPFile">
+            <!-- <parameter key="Threads" value="0"/>
+            <parameter key="BufferVType" value="malloc"/>
+            <parameter key="InitialBufferSize" value="128MB"/> -->
+            <!-- <parameter key="BufferChunkSize" value="1MB"/> -->
+            <!-- <parameter key="MinDeferredSize" value="1MB"/> -->
+        </engine>
+        <transport type="File">
+            <parameter key="Library" value="POSIX"/>
+        </transport>
+    </io>
 </adios-config>

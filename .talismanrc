@@ -1,8 +1,12 @@
 fileignoreconfig:
+- filename: config.xml
+  checksum: 0c9b3d0b8f35825dfea2a826fd778033104e62663d5029274464b4f240bae08d
 - filename: readBp.py
   checksum: 5457ed2a50f9f0e6976af3f1487a219d2aaf42206ace34c49c3186d82174ffe7
 - filename: readHDF5.py
   checksum: 635e499f38ba68b819ef9999d3d8526d25da5c133f2873c52b298075b3530e00
+- filename: src/fits_to_bp.cpp
+  checksum: cc1851f70087d43e9b7958e9f3460f6bddb696b1122c13ae9d73e30a586b132f
 - filename: src/variables-shapes-hl.cpp
   checksum: deaa7a184ce2c499a1375e1967ef8d45825a167602db1aad828b3651fb883d69
 - filename: src/variables-shapes.cpp
